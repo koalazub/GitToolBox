@@ -1,4 +1,4 @@
-package zielu.gittoolbox.startup
+package zielu.gittoolbox.lifecycle
 
 import com.intellij.openapi.project.Project
 import zielu.gittoolbox.lifecycle.ProjectLifecycleNotifier

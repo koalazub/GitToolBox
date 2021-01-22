@@ -2,6 +2,7 @@ package zielu.gittoolbox
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.util.messages.MessageBus
 import zielu.gittoolbox.metrics.AppMetrics
@@ -101,6 +102,12 @@ internal class GitToolBoxApp : Disposable {
   fun publishSync(project: Project, publisher: (messageBus: MessageBus) -> Unit) {
     if (active.get()) {
       publisher.invoke(project.messageBus)
+    }
+  }
+
+  fun publishSync(publisher: (messageBus: MessageBus) -> Unit) {
+    if (active.get()) {
+      publisher.invoke(ApplicationManager.getApplication().messageBus)
     }
   }
 

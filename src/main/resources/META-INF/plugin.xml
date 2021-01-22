@@ -81,7 +81,7 @@
     <additionalTextAttributes scheme="Default" file="zielu/gittoolbox/colorschemes/GitToolBoxDefault.xml" />
     <additionalTextAttributes scheme="Darcula" file="zielu/gittoolbox/colorschemes/GitToolBoxDarcula.xml" />
 
-    <postStartupActivity implementation="zielu.gittoolbox.startup.GitToolBoxStartup" />
+    <postStartupActivity implementation="zielu.gittoolbox.lifecycle.GitToolBoxStartup" />
 
     <projectService serviceInterface="zielu.gittoolbox.revision.RevisionInfoFactory"
                     serviceImplementation="zielu.gittoolbox.revision.LightRevisionInfoFactory" />
@@ -164,9 +164,11 @@
   </extensions>
 
   <application-components>
+    <!--
     <component>
       <implementation-class>zielu.gittoolbox.ForceReloadComponent</implementation-class>
     </component>
+    -->
   </application-components>
 
   <applicationListeners>

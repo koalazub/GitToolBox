@@ -1,4 +1,4 @@
-package zielu.gittoolbox.startup
+package zielu.gittoolbox.lifecycle
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.DumbAware
@@ -9,11 +9,11 @@ import zielu.gittoolbox.config.ProjectConfig
 
 internal class GitToolBoxStartup : StartupActivity, DumbAware {
   override fun runActivity(project: Project) {
-    if (!project.isDefault) {
-      // possibly run config migration
-      AppConfig.getConfig()
-      ProjectConfig.get(project)
+    // possibly run config migration
+    AppConfig.getConfig()
+    ProjectConfig.get(project)
 
+    if (!project.isDefault) {
       // project is ready after migrations are done
       log.info("Project ready")
       GitToolBoxStartupGateway(project).fireProjectReady()
