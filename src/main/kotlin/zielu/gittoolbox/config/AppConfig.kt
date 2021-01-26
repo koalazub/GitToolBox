@@ -12,12 +12,15 @@ internal class AppConfig : PersistentStateComponent<GitToolBoxConfig2> {
   private var state: GitToolBoxConfig2 = GitToolBoxConfig2()
 
   override fun getState(): GitToolBoxConfig2 {
+    log.debug("App config getting state")
     synchronized(this) {
+      log.debug("App config get state: ", state)
       return state
     }
   }
 
   override fun loadState(state: GitToolBoxConfig2) {
+    log.debug("App config state loading")
     synchronized(this) {
       log.debug("App config state loaded: ", state)
       this.state = state
@@ -33,6 +36,7 @@ internal class AppConfig : PersistentStateComponent<GitToolBoxConfig2> {
   private fun migrate() {
     val migrated = ConfigMigrator().migrate(state)
     if (migrated) {
+      log.debug("App config after migration: ", state)
       log.info("Migration done")
     } else {
       log.info("Already migrated")
@@ -44,12 +48,14 @@ internal class AppConfig : PersistentStateComponent<GitToolBoxConfig2> {
   }
 
   fun updateState(updated: GitToolBoxConfig2) {
+    log.debug("App config update: ", updated)
     var fire = false
     var current: GitToolBoxConfig2
     synchronized(this) {
       current = state
       if (updated != current) {
         state = updated
+        log.debug("App config updated: ", state)
         fire = true
       }
     }

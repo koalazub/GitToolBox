@@ -193,6 +193,8 @@
               topic="com.intellij.dvcs.repo.VcsRepositoryMappingListener" />
     <listener class="zielu.gittoolbox.cache.CacheSourcesSubscriberConfigListener"
               topic="zielu.gittoolbox.config.ProjectConfigNotifier" />
+    <listener class="zielu.gittoolbox.cache.CacheSourcesSubscriberPluginLoadListener"
+              topic="zielu.gittoolbox.lifecycle.PluginLifecycleNotifier" />
 
     <listener class="zielu.gittoolbox.changes.ChangeListSubscriberChangeListListener"
               topic="com.intellij.openapi.vcs.changes.ChangeListListener" />

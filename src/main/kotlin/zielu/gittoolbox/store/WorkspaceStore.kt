@@ -6,17 +6,29 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.StoragePathMacros
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
+import zielu.gittoolbox.config.ProjectConfig
 import zielu.gittoolbox.util.AppUtil
 
 @State(name = "GitToolBoxStore", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 internal class WorkspaceStore : PersistentStateComponent<WorkspaceState> {
   private var state: WorkspaceState = WorkspaceState()
 
-  override fun getState(): WorkspaceState = state
+  override fun getState(): WorkspaceState {
+    synchronized(this) {
+      log.debug("Project workspace get state: ", state)
+      return state
+    }
+  }
 
   override fun loadState(state: WorkspaceState) {
-    log.debug("Project workspace state loaded: ", state)
-    this.state = state
+    synchronized(this) {
+      log.debug("Project workspace state loaded: ", state)
+      this.state = state
+    }
+  }
+
+  override fun noStateLoaded() {
+    log.info("No persisted state of workspace configuration")
   }
 
   companion object {

@@ -28,7 +28,7 @@ internal class PluginLifecycleListener : DynamicPluginListener {
 
   override fun checkUnloadPlugin(pluginDescriptor: IdeaPluginDescriptor) {
     if (GitToolBox.isItMe(pluginDescriptor)) {
-      throw CannotUnloadPluginException("Plugin is not yet dynamic")
+      log.info("Can unload")
     }
   }
 

@@ -6,6 +6,7 @@ import git4idea.repo.GitRepository
 import git4idea.repo.GitRepositoryChangeListener
 import zielu.gittoolbox.config.GitToolBoxConfigPrj
 import zielu.gittoolbox.config.ProjectConfigNotifier
+import zielu.gittoolbox.lifecycle.PluginLifecycleNotifier
 import zielu.gittoolbox.util.MessageBusListener
 import zielu.gittoolbox.util.ProjectMessageBusListener
 
@@ -27,6 +28,16 @@ internal class CacheSourcesSubscriberMappingListener(
   project: Project
 ) : ProjectMessageBusListener(project), VcsRepositoryMappingListener {
   override fun mappingChanged() {
+    handleEvent { project ->
+      CacheSourcesSubscriber.getInstance(project).onDirMappingChanged()
+    }
+  }
+}
+
+internal class CacheSourcesSubscriberPluginLoadListener(
+  project: Project
+) : ProjectMessageBusListener(project), PluginLifecycleNotifier {
+  override fun onLoaded() {
     handleEvent { project ->
       CacheSourcesSubscriber.getInstance(project).onDirMappingChanged()
     }

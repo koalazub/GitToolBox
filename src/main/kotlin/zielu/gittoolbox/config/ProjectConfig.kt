@@ -18,6 +18,7 @@ internal class ProjectConfig(
 
   override fun getState(): GitToolBoxConfigPrj {
     synchronized(this) {
+      log.debug("Project config get state: ", state)
       return state
     }
   }
@@ -44,6 +45,7 @@ internal class ProjectConfig(
     val timer = ProjectMetrics.getInstance(project).timer("project-config.migrate")
     val result = timer.timeSupplierKt { ConfigMigrator().migrate(project, state, appConfig) }
     if (result) {
+      log.debug("Project config after migration: ", state)
       log.info("Migration done")
     } else {
       log.info("Already migrated")
