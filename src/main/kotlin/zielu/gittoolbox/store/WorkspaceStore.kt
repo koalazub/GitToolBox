@@ -6,23 +6,25 @@ import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.StoragePathMacros
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
-import zielu.gittoolbox.config.ProjectConfig
 import zielu.gittoolbox.util.AppUtil
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 @State(name = "GitToolBoxStore", storages = [Storage(StoragePathMacros.WORKSPACE_FILE)])
 internal class WorkspaceStore : PersistentStateComponent<WorkspaceState> {
+  private val lock = ReentrantLock()
   private var state: WorkspaceState = WorkspaceState()
 
   override fun getState(): WorkspaceState {
-    synchronized(this) {
+    lock.withLock {
       log.debug("Project workspace get state: ", state)
       return state
     }
   }
 
   override fun loadState(state: WorkspaceState) {
-    synchronized(this) {
-      log.debug("Project workspace state loaded: ", state)
+    log.debug("Project workspace state loaded: ", state)
+    lock.withLock {
       this.state = state
     }
   }
@@ -36,7 +38,7 @@ internal class WorkspaceStore : PersistentStateComponent<WorkspaceState> {
 
     @JvmStatic
     fun get(project: Project): WorkspaceState {
-      return getInstance(project).state
+      return getInstance(project).getState()
     }
 
     @JvmStatic

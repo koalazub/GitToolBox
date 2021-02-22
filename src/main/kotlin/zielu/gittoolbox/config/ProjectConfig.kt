@@ -8,23 +8,26 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.xmlb.annotations.Transient
 import zielu.gittoolbox.metrics.ProjectMetrics
 import zielu.gittoolbox.util.AppUtil
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 @State(name = "GitToolBoxProjectSettings", storages = [Storage("git_toolbox_prj.xml")])
 internal class ProjectConfig(
   @Transient
   private val project: Project
 ) : PersistentStateComponent<GitToolBoxConfigPrj> {
+  private val lock = ReentrantLock()
   private var state: GitToolBoxConfigPrj = GitToolBoxConfigPrj()
 
   override fun getState(): GitToolBoxConfigPrj {
-    synchronized(this) {
+    lock.withLock {
       log.debug("Project config get state: ", state)
       return state
     }
   }
 
   override fun loadState(state: GitToolBoxConfigPrj) {
-    synchronized(this) {
+    lock.withLock {
       log.debug("Project config state loaded: ", state)
       this.state = state
     }
@@ -35,7 +38,7 @@ internal class ProjectConfig(
   }
 
   override fun initializeComponent() {
-    synchronized(this) {
+    lock.withLock {
       migrate()
     }
   }
@@ -53,17 +56,12 @@ internal class ProjectConfig(
   }
 
   fun updateState(updated: GitToolBoxConfigPrj) {
-    var fire = false
-    var current: GitToolBoxConfigPrj
-    synchronized(this) {
-      current = state
+    lock.withLock {
+      val current = state
       if (updated != current) {
         state = updated
-        fire = true
+        fireChanged(current, updated)
       }
-    }
-    if (fire) {
-      fireChanged(current, updated)
     }
   }
 
@@ -76,7 +74,7 @@ internal class ProjectConfig(
 
     @JvmStatic
     fun get(project: Project): GitToolBoxConfigPrj {
-      return getInstance(project).state
+      return getInstance(project).getState()
     }
 
     @JvmStatic

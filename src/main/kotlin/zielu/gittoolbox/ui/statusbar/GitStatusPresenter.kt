@@ -58,7 +58,7 @@ internal class GitStatusPresenter(project: Project) {
 
     format(config, repoInfo, parts)
     if (config.showStatusWidget) {
-      toolTip.update(repository, repoInfo.count())
+      toolTip.update(repository, repoInfo.count)
     }
 
     text = combineParts(parts)
@@ -84,7 +84,7 @@ internal class GitStatusPresenter(project: Project) {
 
   private fun format(config: GitToolBoxConfig2, repoInfo: RepoInfo, parts: MutableList<String>) {
     if (config.showStatusWidget) {
-      val count = repoInfo.count()
+      val count = repoInfo.count
       if (count == null) {
         parts.add(na())
       } else {
@@ -119,7 +119,7 @@ internal class GitStatusPresenter(project: Project) {
 
   private fun combine(repoInfos: List<RepoInfo>): RepoInfo {
     val aheadBehinds = repoInfos
-      .mapNotNull { it.count() }
+      .mapNotNull { it.count }
       .filter { it.status() == Status.SUCCESS }
       .toList()
 
@@ -131,8 +131,8 @@ internal class GitStatusPresenter(project: Project) {
   }
 
   private fun combine(first: GitAheadBehindCount, second: GitAheadBehindCount): GitAheadBehindCount {
-    val ahead = first.ahead.value() + second.ahead.value()
-    val behind = second.behind.value() + second.behind.value()
+    val ahead = first.ahead.value!! + second.ahead.value!!
+    val behind = first.behind.value!! + second.behind.value!!
     return GitAheadBehindCount.success(ahead, null, behind, null)
   }
 }

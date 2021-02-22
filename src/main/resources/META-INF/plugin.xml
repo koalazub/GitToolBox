@@ -24,7 +24,7 @@
   <depends optional="true" config-file="gitextender-features.xml">gr.jchrist.gitextender</depends>
   <depends optional="true" config-file="android-features.xml">org.jetbrains.android</depends>
   <!-- please see https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
-  <idea-version since-build="203.5981" until-build="203.*" />
+  <idea-version since-build="203.5981" until-build="211.*" />
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
@@ -83,10 +83,8 @@
 
     <postStartupActivity implementation="zielu.gittoolbox.lifecycle.GitToolBoxStartup" />
 
-    <projectService serviceInterface="zielu.gittoolbox.revision.RevisionInfoFactory"
-                    serviceImplementation="zielu.gittoolbox.revision.LightRevisionInfoFactory" />
-    <projectService serviceInterface="zielu.gittoolbox.revision.RevisionService"
-                    serviceImplementation="zielu.gittoolbox.revision.RevisionServiceImpl" />
+    <projectService serviceImplementation="zielu.gittoolbox.revision.RevisionInfoFactory" />
+    <projectService serviceImplementation="zielu.gittoolbox.revision.RevisionService" />
 
     <projectService serviceImplementation="zielu.gittoolbox.blame.DebugInlineBlameAllowed" />
     <projectService serviceInterface="zielu.gittoolbox.blame.BlameLoader"
@@ -109,7 +107,7 @@
     <projectService serviceInterface="zielu.gittoolbox.cache.VirtualFileRepoCache"
                     serviceImplementation="zielu.gittoolbox.cache.VirtualFileRepoCacheImpl" />
     <projectService serviceImplementation="zielu.gittoolbox.cache.CacheTaskScheduler" />
-    <projectService serviceImplementation="zielu.gittoolbox.cache.InfoCacheGateway" />
+    <projectService serviceImplementation="zielu.gittoolbox.cache.InfoCacheFacade" />
     <projectService serviceInterface="zielu.gittoolbox.cache.PerRepoInfoCache"
                     serviceImplementation="zielu.gittoolbox.cache.PerRepoInfoCacheImpl" />
 
@@ -124,7 +122,7 @@
                     serviceImplementation="zielu.gittoolbox.fetch.AutoFetch" />
     <projectService serviceImplementation="zielu.gittoolbox.fetch.AutoFetchState" />
     <projectService serviceImplementation="zielu.gittoolbox.fetch.AutoFetchSubscriber" />
-    <projectService serviceImplementation="zielu.gittoolbox.fetch.AutoFetchGateway" />
+    <projectService serviceImplementation="zielu.gittoolbox.fetch.AutoFetchFacade" />
     <projectService serviceImplementation="zielu.gittoolbox.fetch.AutoFetchSchedule" />
     <projectService serviceImplementation="zielu.gittoolbox.fetch.AutoFetchOnBranchSwitch" />
     <projectService serviceImplementation="zielu.gittoolbox.fetch.AutoFetchExecutor" />
@@ -146,6 +144,9 @@
     <statusBarWidgetFactory implementation="zielu.gittoolbox.ui.statusbar.BlameStatusBarWidgetFactory" />
 
     <registryKey defaultValue="true" description="Persistent file blame cache" key="zielu.gittoolbox.blame.cache.persistent" />
+    <registryKey defaultValue="true" description="Debounce first auto-fetch" key="zielu.gittoolbox.fetch.auto.debounce.first" />
+    <registryKey defaultValue="false" description="Auto-fetch in background" key="zielu.gittoolbox.fetch.auto.in.background" />
+    <registryKey defaultValue="false" description="Diagnostic mode" key="zielu.gittoolbox.diagnostic.mode" />
 
     <notificationGroup
         id="gittoolbox.behind.tracker"
@@ -275,6 +276,10 @@
       <reference id="GitToolBox.PushTags" />
       <reference id="GitToolBox.RefreshBlame" />
       <add-to-group group-id="Git.MainMenu" anchor="last"/>
+      <group class="zielu.gittoolbox.ui.actions.diagnostic.DiagnosticGroup" id="GitToolBox.DiagnosticGroup"
+             text="GitToolBox Diagnostic"
+             popup="true"
+      />
     </group>
 
     <group id="GitToolBox.BranchIssues" text="Branch Issues"

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
@@ -16,6 +17,7 @@ import java.util.function.Supplier;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.jetbrains.annotations.NotNull;
+import zielu.gittoolbox.GitToolBoxRegistry;
 import zielu.gittoolbox.metrics.ProjectMetrics;
 import zielu.gittoolbox.status.GitStatusCalculator;
 import zielu.gittoolbox.util.GtUtil;
@@ -59,8 +61,8 @@ class PerRepoInfoCacheImpl implements PerRepoInfoCache, Disposable {
 
   private void updateAction(@NotNull GitRepository repository) {
     RepoInfo info = getRepoInfo(repository);
-    InfoCacheGateway gateway = InfoCacheGateway.getInstance(project);
-    RepoStatus currentStatus = gateway.createRepoStatus(repository);
+    InfoCacheFacade facade = InfoCacheFacade.getInstance(project);
+    RepoStatus currentStatus = facade.createRepoStatus(repository);
     RepoInfo freshInfo = behindStatuses.get().computeIfPresent(repository, (repo, oldInfo) ->
         statusCalculator.update(repo, calculator, currentStatus));
 
@@ -68,6 +70,22 @@ class PerRepoInfoCacheImpl implements PerRepoInfoCache, Disposable {
       publisher.notifyRepoChanged(repository, info, freshInfo);
     } else {
       log.debug("Status did not change [", GtUtil.name(repository), "]: ", freshInfo);
+    }
+    checkAndNotifyAllRepositoriesInitialized();
+  }
+
+  private void checkAndNotifyAllRepositoriesInitialized() {
+    if (GitToolBoxRegistry.shouldDebounceFirstAutoFetch()) {
+      Map<GitRepository, RepoInfo> statusMap = Map.copyOf(behindStatuses.get());
+      if (!statusMap.isEmpty()) {
+        boolean allRepositoriesInitialized = statusMap.values().stream().noneMatch(RepoInfo::isEmpty);
+        log.debug("All repositories initialized: ", allRepositoriesInitialized);
+        if (allRepositoriesInitialized) {
+          publisher.notifyAllRepositoriesInitialized(List.copyOf(statusMap.keySet()));
+        }
+      } else {
+        log.debug("No repositories to check for all initialized");
+      }
     }
   }
 
@@ -117,11 +135,14 @@ class PerRepoInfoCacheImpl implements PerRepoInfoCache, Disposable {
   }
 
   @Override
-  public void updatedRepoList(List<GitRepository> repositories) {
+  public void updatedRepoList(@NotNull List<GitRepository> repositories) {
     if (disposeGuard.isActive()) {
-      Set<GitRepository> removed = new HashSet<>(behindStatuses.get().keySet());
+      log.debug("Updated repo list: ", repositories);
+      ConcurrentMap<GitRepository, RepoInfo> statusMap = behindStatuses.get();
+      Set<GitRepository> removed = new HashSet<>(statusMap.keySet());
       removed.removeAll(repositories);
       purgeRepositories(removed);
+      repositories.forEach(repo -> statusMap.putIfAbsent(repo, RepoInfo.empty()));
     }
   }
 

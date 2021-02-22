@@ -12,7 +12,7 @@ import zielu.junit5.intellij.extension.platform.LightPlatformTestCaseExtension
 internal class AutoFetchIntegrationTest {
   @Test
   fun `should return AutoFetchGateway`(project: Project) {
-    assertThat(AutoFetchGateway.getInstance(project)).isNotNull
+    assertThat(AutoFetchFacade.getInstance(project)).isNotNull
   }
 
   @Test
@@ -26,6 +26,6 @@ internal class AutoFetchIntegrationTest {
     val state = AutoFetchState.getInstance(project)
 
     // when
-    assertThat(state.canAutoFetch()).isTrue()
+    assertThat(state.canAutoFetch()).isTrue
   }
 }

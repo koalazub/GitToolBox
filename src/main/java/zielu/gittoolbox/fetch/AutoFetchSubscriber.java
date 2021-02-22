@@ -29,11 +29,15 @@ class AutoFetchSubscriber {
     AutoFetchComponent.getInstance(project).projectReady();
   }
 
+  public void onAllReposInitialized(@NotNull Collection<? extends GitRepository> repositories) {
+    AutoFetchComponent.getInstance(project).allRepositoriesInitialized(repositories.size());
+  }
+
   void onRepoStateChanged(@NotNull RepoInfo previous,
                           @NotNull RepoInfo current,
                           @NotNull GitRepository repository) {
     if (ProjectConfig.get(project).getAutoFetchOnBranchSwitch()) {
-      if (!previous.isEmpty() && !current.isEmpty() && !previous.status().sameLocalBranch(current.status())) {
+      if (!previous.isEmpty() && !current.isEmpty() && !previous.getStatus().sameLocalBranch(current.getStatus())) {
         if (exclusions.isAllowed(repository)) {
           AutoFetchOnBranchSwitch.getInstance(project).onBranchSwitch(current, repository);
         }

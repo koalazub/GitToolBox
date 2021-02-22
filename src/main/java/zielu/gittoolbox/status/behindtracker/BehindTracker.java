@@ -28,15 +28,15 @@ class BehindTracker implements Disposable {
   private final Map<GitRepository, RepoInfo> state = new HashMap<>();
   private final Map<GitRepository, PendingChange> pendingChanges = new HashMap<>();
 
-  private final BehindTrackerLocalGateway gateway;
+  private final BehindTrackerFacade facade;
 
   BehindTracker(@NotNull Project project) {
-    this(new BehindTrackerLocalGateway(project));
+    this(new BehindTrackerFacade(project));
   }
 
   @NonInjectable
-  BehindTracker(BehindTrackerLocalGateway gateway) {
-    this.gateway = gateway;
+  BehindTracker(BehindTrackerFacade facade) {
+    this.facade = facade;
   }
 
   @NotNull
@@ -77,14 +77,14 @@ class BehindTracker implements Disposable {
 
   private Map<GitRepository, BehindStatus> removeZeros(@NotNull Map<GitRepository, BehindStatus> statuses) {
     return statuses.entrySet().stream()
-        .filter(entry -> entry.getValue().behind() > 0)
+        .filter(entry -> entry.getValue().getBehind() > 0)
         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
   }
 
   private BehindMessage createBehindMessage(Map<GitRepository, BehindStatus> statuses) {
     boolean manyReposInProject = hasManyReposInProject();
     boolean manyReposInStatuses = statuses.size() > 1;
-    return new BehindMessage(gateway.prepareBehindMessage(statuses, manyReposInProject),
+    return new BehindMessage(facade.prepareBehindMessage(statuses, manyReposInProject),
         manyReposInStatuses);
   }
 
@@ -101,7 +101,7 @@ class BehindTracker implements Disposable {
 
   private void showNotification(@NotNull BehindMessage message, @NotNull ChangeType changeType) {
     StringBand finalMessage = formatMessage(message, changeType);
-    gateway.displaySuccessNotification(finalMessage.toString());
+    facade.displaySuccessNotification(finalMessage.toString());
   }
 
   @NotNull
@@ -120,14 +120,14 @@ class BehindTracker implements Disposable {
   private void onStateChangeUnsafe(@NotNull GitRepository repository, @NotNull RepoInfo info) {
     RepoInfo previousInfo = state.put(repository, info);
     if (log.isDebugEnabled()) {
-      GtRepository repo = gateway.getGtRepository(repository);
+      GtRepository repo = facade.getGtRepository(repository);
       log.debug("Info update [", repo.getName(), "]: ", previousInfo, " > ", info);
     }
     ChangeType changeType = detectChangeType(previousInfo, info);
     if (changeType == ChangeType.FETCHED) {
       BehindStatus status = null;
       if (previousInfo == null) {
-        status = calculateBehindStatus(info, count -> BehindStatus.create(count.behind));
+        status = calculateBehindStatus(info, count -> new BehindStatus(count.getBehind()));
       } else if (info.maybeCount().isPresent()) {
         status = calculateBehindStatus(info, count -> calculateBehindStatus(previousInfo, count));
       }
@@ -149,9 +149,9 @@ class BehindTracker implements Disposable {
 
   private BehindStatus calculateBehindStatus(@Nullable RepoInfo previous, @NotNull GitAheadBehindCount currentCount) {
     int oldBehind = Optional.ofNullable(previous).flatMap(RepoInfo::maybeCount)
-        .map(count -> count.behind.value()).orElse(0);
-    int delta = currentCount.behind.value() - oldBehind;
-    return BehindStatus.create(currentCount.behind, delta);
+        .map(count -> count.getBehind().value().orElse(0)).orElse(0);
+    int delta = currentCount.getBehind().value().orElse(0) - oldBehind;
+    return new BehindStatus(currentCount.getBehind(), delta);
   }
 
   private ChangeType detectChangeType(@Nullable RepoInfo previous, @NotNull RepoInfo current) {
@@ -182,19 +182,19 @@ class BehindTracker implements Disposable {
   }
 
   private boolean isSameParentBranch(@NotNull RepoInfo previous, @NotNull RepoInfo current) {
-    return previous.status().sameParentBranch(current.status());
+    return previous.getStatus().sameParentBranch(current.getStatus());
   }
 
   private boolean isParentHashChanged(@NotNull RepoInfo previous, @NotNull RepoInfo current) {
-    return !previous.status().sameParentHash(current.status());
+    return !previous.getStatus().sameParentHash(current.getStatus());
   }
 
   private boolean isLocalBranchSwitched(@NotNull RepoInfo previous, @NotNull RepoInfo current) {
-    return !previous.status().sameLocalBranch(current.status());
+    return !previous.getStatus().sameLocalBranch(current.getStatus());
   }
 
   void showChangeNotification() {
-    if (gateway.isNotificationEnabled()) {
+    if (facade.isNotificationEnabled()) {
       ImmutableMap<GitRepository, PendingChange> changes = drainChanges();
       log.debug("Show notification for ", changes.size(), " repositories");
       showNotification(changes);

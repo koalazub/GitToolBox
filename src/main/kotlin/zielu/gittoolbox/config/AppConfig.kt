@@ -6,14 +6,17 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.diagnostic.Logger
 import zielu.gittoolbox.util.AppUtil
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 @State(name = "GitToolBoxAppSettings2", storages = [Storage("git_toolbox_2.xml")])
 internal class AppConfig : PersistentStateComponent<GitToolBoxConfig2> {
+  private val lock = ReentrantLock()
   private var state: GitToolBoxConfig2 = GitToolBoxConfig2()
 
   override fun getState(): GitToolBoxConfig2 {
     log.debug("App config getting state")
-    synchronized(this) {
+    lock.withLock {
       log.debug("App config get state: ", state)
       return state
     }
@@ -21,14 +24,14 @@ internal class AppConfig : PersistentStateComponent<GitToolBoxConfig2> {
 
   override fun loadState(state: GitToolBoxConfig2) {
     log.debug("App config state loading")
-    synchronized(this) {
+    lock.withLock {
       log.debug("App config state loaded: ", state)
       this.state = state
     }
   }
 
   override fun initializeComponent() {
-    synchronized(this) {
+    lock.withLock {
       migrate()
     }
   }
@@ -48,19 +51,12 @@ internal class AppConfig : PersistentStateComponent<GitToolBoxConfig2> {
   }
 
   fun updateState(updated: GitToolBoxConfig2) {
-    log.debug("App config update: ", updated)
-    var fire = false
-    var current: GitToolBoxConfig2
-    synchronized(this) {
-      current = state
+    lock.withLock {
+      val current = state
       if (updated != current) {
         state = updated
-        log.debug("App config updated: ", state)
-        fire = true
+        fireUpdated(current, updated)
       }
-    }
-    if (fire) {
-      fireUpdated(current, updated)
     }
   }
 
@@ -75,7 +71,7 @@ internal class AppConfig : PersistentStateComponent<GitToolBoxConfig2> {
 
     @JvmStatic
     fun getConfig(): GitToolBoxConfig2 {
-      return getInstance().state
+      return getInstance().getState()
     }
 
     @JvmStatic

@@ -93,8 +93,8 @@ public final class RepoStatus {
   }
 
   public boolean sameHashes(GitAheadBehindCount aheadBehind) {
-    return Objects.equals(localHash, aheadBehind.ahead.top())
-               && Objects.equals(remote.parentHash(), aheadBehind.behind.top());
+    return Objects.equals(localHash, aheadBehind.getAhead().getTop())
+               && Objects.equals(remote.parentHash(), aheadBehind.getBehind().getTop());
   }
 
   public boolean isEmpty() {
